@@ -9,7 +9,9 @@ Realizado por
 Para correr lo contenido en este repositorio se deben correr los siguientes comandos en la terminal
 
 Se debe configurar el puerto conectado a la Hackerboard
-$ chmod 666 /dev/ttyUSB0
+~~~
+$ chmod 666 /dev/ttyUSB0 
+~~~
 
 Luego
 $ roslaunch  puzzlebot_autostart puzzlebot_autostart.launch
