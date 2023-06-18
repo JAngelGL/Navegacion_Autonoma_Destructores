@@ -31,14 +31,11 @@ class line_follower():
         self.y = 150 # Coordenada y del borde superior
         self.width = 80
         self.height = 45 
-
         self.linear_vel = 0.067 # Velocidad lineal del robot
         
-
+        #Banderas usadas
         self.flagdetection=False 
         self.flagactivado=True
-
-
         self.flagdirection=True #supone que hay una senal de izquierda
         
         # Controlador PID
@@ -86,51 +83,52 @@ class line_follower():
                 self.flag_once = False
                 self.flag_turn = False
 
-                # Si se encuentran contornos
+                # Inicia la maquina de estados
+                #Estado Start sujeto a la luz del semaforo
                 if self.estado == "start" and (self.estado_semaforo == "null" or self.estado_semaforo == "green"): 
                     self.line_follower(1)
                     print("follow line")
-
+                #Estado give_way el cual divide la velicidad a la mitad
                 elif self.estado == "give_way" and self.flag_once == False:
                     print("cambio a give_way")
                     self.give_way_state(2)
                     self.flag_once = True
-
+                #Estado work el cual divide la velicidad a la mitad
                 elif self.estado == "work":
                     print("cambio a work")
                     self.work_state(2)	
-                    
+                #Estado red el cual es un alto total    
                 elif self.semaforo == "red":
                     print("estado red")
                     self.line_follower(3)
                     if self.semaforo != "red":
                         self.estado = "start"
                         self.semaforo = "green"
-
+                #Estado turn left a velcidad normal
                 elif self.estado == "left" and self.estado_semaforo == "green":#funciona
                     print("cambio a left")
                     self.turn_left(1)
-
+                #Estado turn left a velcidad media
                 elif self.estado == "left" and self.estado_semaforo == "yellow":#funciona
                     print("cambio a left vel mitad")
                     self.turn_left(4)              
-                    
+                #Estado turn right a velcidad normal
                 elif self.estado == "right"and self.estado_semaforo == "green":#funciona
                     print("cambio a right")
                     self.turn_right(1)
-
+                #Estado turn right a velcidad media
                 elif self.estado == "right"and self.estado_semaforo == "yellow": #funciona
                     print("cambio a right vel mitad")
                     self.turn_right(4)       
-
+                #Estado straight a velcidad normal
                 elif (self.estado == "straight" and self.estado_semaforo == "green"): #funciona
                     print("cambio a straight")
                     self.forward_state(1) #el 1 para mantener la vel normal  
-
+                #Estado straight a velcidad media
                 elif (self.estado == "straight" and self.estado_semaforo == "yellow"):#funciona
                     print("cambio a straight vel mitad")
                     self.forward_state(3) ##el 3 es para dividir la velocidad
-                                         
+                #Estado stop para finalizar el recorido                         
                 elif (self.estado == "stop"):
                     print("cambio a stop")
                     self.stop_state()
@@ -151,6 +149,8 @@ class line_follower():
     def semaforo_callback(self, msg):
         self.semaforo = msg.data
 
+    
+    #Funcion para activar el segiodor de lines que recibe m para modificar la velocidad
     def line_follower (self, m):
         line_contour = max(self.contours, key=cv2.contourArea)
 
@@ -192,11 +192,11 @@ class line_follower():
 
             print("lineal", self.twist_msg.linear.x)
             print("angular",self.twist_msg.angular.z)
-
+    #Funcion para girar a la izquierda que recibe mod para modificar la velocidad
     def turn_left (self,mod):
         print(self.estado)
-        # Mantener el movimiento constante durante 1.5 segundos
-        for _ in range(22 * mod):
+        # Mantener el movimiento constante durante 2.2 segundos
+        for _ in range(22 * mod): 
             self.twist_msg.linear.x = 0.2 / mod
             self.twist_msg.angular.z = 0
             self.robot_vel_pub.publish(self.twist_msg)
@@ -204,7 +204,7 @@ class line_follower():
 
         print("hora de la vuelta")
 
-        # Realizar la vuelta durante 5 segundos
+        # Realizar la vuelta durante 3.9 segundos
         for _ in range(39):
             self.twist_msg.linear.x = 0.0
             self.twist_msg.angular.z = 0.4
@@ -213,7 +213,7 @@ class line_follower():
             rospy.sleep(0.1)
 
         print("acaba vuelta + empuje")
-
+        # Mantener el movimiento constante durante 1.2 segundos
         for _ in range(12):
             self.twist_msg.linear.x = 0.1
             self.twist_msg.angular.z = 0
@@ -222,9 +222,9 @@ class line_follower():
 
         self.signal = "start"
         self.semaforo = "null"
-        
+    #Funcion para girar a la derecha que recibe mod para modificar la velocidad   
     def turn_right (self,mod):
-        # Mantener el movimiento constante durante 1.5 segundos
+        # Mantener el movimiento constante durante 2.2 segundos
         for _ in range(22 * mod):
             self.twist_msg.linear.x = 0.195 / mod
             self.twist_msg.angular.z = 0
@@ -233,7 +233,7 @@ class line_follower():
 
         print("hora de la vuelta")
 
-        # Realizar la vuelta durante 5 segundos
+        # Realizar la vuelta durante 4.4 segundos
         for _ in range(44):
             self.twist_msg.linear.x = 0.0
             self.twist_msg.angular.z = -0.35 
@@ -242,7 +242,7 @@ class line_follower():
             rospy.sleep(0.1)
 
         print("acaba vuelta + empuje")
-
+        # Mantener el movimiento constante durante 0.6 segundos
         for _ in range(6):
             self.twist_msg.linear.x = 0.192 
             self.twist_msg.angular.z = 0.0
@@ -251,10 +251,10 @@ class line_follower():
 
         self.signal = "start"
         self.semaforo = "null"
-
+    #Funcion para dividir la velocidad a la mitad por un tiempo determinado
     def give_way_state (self, mod):
         print("Give_way")
-        # Mantener el movimiento constante durante 5 segundos
+        # Mantener el movimiento constante durante 4.5 segundos
         for _ in range(45):
             self.line_follower(mod)	#se pone el 2 para reducir la velocidad a la mitad
             rospy.sleep(0.1)
@@ -262,10 +262,10 @@ class line_follower():
 
         self.signal = "start"
         self.semaforo = "null"
-
+    #Funcion para dividir la velocidad a la mitad por un tiempo determinado
     def work_state (self, mod):
         print("Work")
-        # Mantener el movimiento constante durante 5 segundos
+        # Mantener el movimiento constante durante 1.8 segundos
         for _ in range(18):
             self.line_follower(mod)	#se pone el 2 para reducir la velocidad a la mitad
             rospy.sleep(0.1)
@@ -273,9 +273,10 @@ class line_follower():
 
         self.signal = "start"
         self.semaforo = "null"
-
+    #Funcion para mantener un movimiento lineal por un tiempo determinado que tambien pude modificar la velociada 
     def forward_state (self, mod):
         print("straight")
+        # Mantener el movimiento constante durante 3.5 segundos
         for _ in range(35 * mod):
             self.twist_msg.linear.x = 0.2 / mod
             self.twist_msg.angular.z = 0.0
@@ -286,12 +287,11 @@ class line_follower():
         self.signal = "start"
         self.semaforo = "null"
 
-
+    #Funcion para detener el movimiento 
     def stop_state (self):
         print("Senal de stop")
 
-        # Mantener el movimiento constante durante 10 segundos
-        
+        # Mantener el movimiento constante durante 1 segundos
         for _ in range(10):
             self.twist_msg.linear.x = 0.0
             self.twist_msg.angular.z = 0.0
