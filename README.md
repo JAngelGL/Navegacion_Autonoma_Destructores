@@ -6,3 +6,7 @@ Realizado por
 * Emiliano Mendoza Nieto A01706083
 * José Ángel García López A01275108
 
+Para correr lo contenido en este repositorio se deben correr los siguientes comandos en la terminal
+
+$sudo apt
+
